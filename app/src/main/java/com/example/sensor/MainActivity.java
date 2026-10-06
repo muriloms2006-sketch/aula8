@@ -2,6 +2,7 @@ package com.example.sensor;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -19,6 +20,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity implements SensorEventListener{
     int contador=0;
     TextView tv;
@@ -33,16 +36,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        SensorManager sm= (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         Sensor ac = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sm.registerListener(this,ac, SensorManager.SENSOR_DELAY_NORMAL);
+        sm.registerListener(this, ac, SensorManager.SENSOR_DELAY_NORMAL);
         tv = findViewById(R.id.textView);
         database = openOrCreateDatabase("bd", MODE_PRIVATE, null);
-        database.execSQL("CREATE TABLE IF NOT EXISTS eventos (id INTEGER PRIMARY_KEY_AUTO_INCREMENT, " +
+        database.execSQL("CREATE TABLE IF NOT EXISTS eventos (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "value1 REAL(5,2)," +
                 "value2 REAL(5,2)," +
                 "value3 REAL(5,2))");
+        getAllEvents();
 
+    }
+
+    public ArrayList<Eventos> getAllEvents(){
+        Cursor cursor=database.rawQuery("SELECT * FROM eventos LIMIT ?", new String[]{"1000"});
+        cursor.moveToFirst();
+        ArrayList<Eventos> result = new ArrayList<>();
+        while (!cursor.isAfterLast()){
+            result.add(
+                    new Eventos(cursor.getInt(0),
+                            new Float[]{cursor.getFloat(1),cursor.getFloat(2),cursor.getFloat(3)})
+
+            );
+            cursor.moveToNext();
+        }
+        return result;
     }
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy){
