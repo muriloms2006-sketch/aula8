@@ -1,11 +1,14 @@
 package com.example.sensor;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -19,6 +22,7 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainActivity extends AppCompatActivity implements SensorEventListener{
     int contador=0;
     TextView tv;
+    SQLiteDatabase database;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +37,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Sensor ac = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sm.registerListener(this,ac, SensorManager.SENSOR_DELAY_NORMAL);
         tv = findViewById(R.id.textView);
+        database = openOrCreateDatabase("bd", MODE_PRIVATE, null);
+        database.execSQL("CREATE TABLE IF NOT EXISTS eventos (id INTEGER PRIMARY_KEY_AUTO_INCREMENT, " +
+                "value1 REAL(5,2)," +
+                "value2 REAL(5,2)," +
+                "value3 REAL(5,2))");
+
     }
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy){
@@ -44,5 +54,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         tv.setText(Float.toString(event.values[0])+" : "+
                    Float.toString(event.values[1])+" : "+
                    Float.toString(event.values[2]));
+        ContentValues contentValues=new ContentValues();
+        contentValues.put("value1", event.values[0]);
+        contentValues.put("value2", event.values[1]);
+        contentValues.put("value3", event.values[2]);
+        Log.v("evento", "Inserido:" +event);
+        database.insert("eventos", null,contentValues);
     }
 }
